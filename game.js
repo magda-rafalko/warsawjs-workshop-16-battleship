@@ -55,6 +55,21 @@ class GameBoard extends ViewComponent {
         this._cells[coordinatesText].setState(state);
     }
 }
+class ScoreCounter extends ViewComponent {
+    constructor() {
+        super();
+        this._element = document.createElement('div');
+        const scoreText = document.createElement('p');
+        scoreText.textContent = 'Your score:';
+        this.yourScore = document.createElement('p');
+        this.yourScore.textContent = '0';
+        this._element.appendChild(scoreText);
+        this._element.appendChild(this.yourScore);
+    }
+    setScore(score) {
+        this.yourScore.textContent = score.toString();
+    }
+}
 
 class GameController {
     constructor(boardModel) {
@@ -71,10 +86,11 @@ class GameModel {
     constructor() {
         this._cells = {};
         this._observers = [];
+        this._score = 0;
         for (let rowIndex = 0; rowIndex < 10; rowIndex++) {
             for (let columnIndex = 0; columnIndex < 10; columnIndex++) {
                 const coordinatesText = rowIndex + 'x' +columnIndex;
-                const hasShip = (Math.random() >= 0.8)
+                const hasShip = (Math.random() >= 0.8);
                 this._cells[coordinatesText] = {
                 hasShip,
                 fireAt: false
@@ -91,6 +107,11 @@ class GameModel {
         }
         targetCell.fireAt = true;
         const result = targetCell.hasShip ? 'hit' : 'miss';
+        if (result === 'hit') {
+            this._score++;
+            this._observers.forEach(observer => observer('scored', {score: this._score}))
+        }
+
         this._observers.forEach(function(observer) {
             observer('firedAt', {result, row, column});
         })
@@ -105,7 +126,7 @@ class GameModel {
 const gameElement = document.getElementById('game');
 let board;
 let controller;
-
+const counter = new ScoreCounter();
 
 
 function handleCellClick(row, column) {
@@ -121,7 +142,11 @@ model.addObserver( function(eventType, params) {
         case 'firedAt':
             board.setStateAt(params.row, params.column, params.result);
             break;
+        case 'scored':
+            counter.setScore(params.score);
+            break;
     }
 });
 
 gameElement.appendChild(board.getElement());
+gameElement.appendChild(counter.getElement());
