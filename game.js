@@ -1,16 +1,29 @@
-const gameElement = document.getElementById('game');
-const row = document.createElement('TR');
-const cell1 = document.createElement('TD');
-const cell2 = document.createElement('TD');
+'use strict';
 
-gameElement.appendChild(row);
-row.appendChild(cell1);
-row.appendChild(cell2);
+class GameCell {
+    constructor() {
+        this._state = 'unknown';
+        this._element = document.createElement('td');
+        const self = this;
+        this._element.addEventListener('click', function _handleClick() {
+            self.setState('miss');
+        });
+    }
+    setState(state) {
+       if (state !== 'unknown' && state !== 'miss' && state !== 'hit') {
+           throw new Error('Invalid state')
+       }
+       this._state = state;
+       this._element.className = 'cell_' + state;
+    }
+    getElement() {
+        return this._element;
 
-function colorCell(event) {
-    event.target.classList.add('clicked');
+    }
 }
 
-const cells = [cell1, cell2];
-
-cells.forEach(cell => cell.addEventListener('click', colorCell));
+const gameElement = document.getElementById('game');
+const row = document.createElement('tr');
+gameElement.appendChild(row);
+const cell1 = new GameCell();
+row.appendChild(cell1.getElement());
