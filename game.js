@@ -70,11 +70,13 @@ class GameController {
 class GameModel {
     constructor() {
         this._cells = {};
+        this._observers = [];
         for (let rowIndex = 0; rowIndex < 10; rowIndex++) {
             for (let columnIndex = 0; columnIndex < 10; columnIndex++) {
                 const coordinatesText = rowIndex + 'x' +columnIndex;
+                const hasShip = (Math.random() >= 0.8)
                 this._cells[coordinatesText] = {
-                hasShip: true,
+                hasShip,
                 fireAt: false
                     }
                 }
@@ -88,7 +90,13 @@ class GameModel {
             return;
         }
         targetCell.fireAt = true;
-        console.log(`has ship? ${targetCell.hasShip}`);
+        const result = targetCell.hasShip ? 'hit' : 'miss';
+        this._observers.forEach(function(observer) {
+            observer('firedAt', {result, row, column});
+        })
+    }
+    addObserver(observerFunction) {
+    this._observers.push(observerFunction);
     }
 }
 
@@ -108,5 +116,12 @@ board = new GameBoard(handleCellClick);
 const model = new GameModel();
 controller = new GameController(model);
 
+model.addObserver( function(eventType, params) {
+    switch (eventType) {
+        case 'firedAt':
+            board.setStateAt(params.row, params.column, params.result);
+            break;
+    }
+});
+
 gameElement.appendChild(board.getElement());
-// board.setStateAt(0, 0, 'miss');
